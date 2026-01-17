@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Life Update | 365</title>
+    <style>
+        :root {
+            /* Colors */
+            --bg-gradient: linear-gradient(180deg, #10121a 0%, #000000 100%);
+            --dot-passed: #ff3b30; 
+            --dot-today: #ffffff;
+            --dot-future: #1c1c1e;
+            --text-main: #ffffff;
+            --text-dim: #8e8e93;
+
+            /* Grid Constants */
+            --dot-size: 8px;
+            --grid-gap: 10px;
+            --grid-max-width: 320px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Roboto", sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 15vh;
+        }
+
+        .header-container {
+            text-align: center;
+            margin-bottom: 40px;
+            width: 90%;
+            flex-shrink: 0;
+        }
+
+        #quote-display {
+            font-style: italic;
+            font-weight: 400;
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            letter-spacing: 0.02em;
+            margin-bottom: 8px;
+            min-height: 1.4em;
+        }
+
+        #year-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        #stats-display {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* Auto-Scale Container System */
+        .grid-frame {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        #grid-scale {
+            transform-origin: top center;
+            will-change: transform;
+            display: flex;
+            justify-content: center;
+        }
+
+        #calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr); 
+            gap: var(--grid-gap);
+            width: var(--grid-max-width);
+        }
+
+        .dot {
+            width: var(--dot-size);
+            height: var(--dot-size);
+            border-radius: 50%;
+            background-color: var(--dot-future);
+        }
+
+        .dot.passed {
+            background-color: var(--dot-passed);
+            box-shadow: 0 0 4px rgba(255, 59, 48, 0.3);
+        }
+
+        .dot.today {
+            background-color: var(--dot-today);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+            transform: scale(1.4);
+            z-index: 5;
+        }
+
+        /* Render Mode Stability */
+        body.render-mode .dot.today {
+            box-shadow: 0 0 10px #ffffff;
+            transition: none;
+        }
+    </style>
+</head>
+<body id="main-view">
+
+    <div class="header-container">
+        <div id="quote-display"></div>
+        <h1 id="year-display"></h1>
+        <div id="stats-display"></div>
+    </div>
+
+    <div class="grid-frame">
+        <div id="grid-scale">
+            <div id="calendar-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const GRID_COLUMNS = 15;
+        const QUOTES = [
+            "Action is everything", "Focus on the now", "The journey is the reward",
+            "Keep moving forward", "One day at a time", "Your time is limited",
+            "Stay hungry, stay foolish", "Discipline equals freedom", "Own the morning",
+            "Success is consistency", "Build your legacy", "Time is a gift",
+            "The clock is ticking", "Don't waste your life", "Make it happen",
+            "Value every second", "Create your future", "Do it for yourself",
+            "Eyes on the prize", "Seize the moment"
+        ];
+
+        // Instructions: Set property based on viewport height
+        document.documentElement.style.setProperty(
+            '--grid-max-width',
+            window.innerHeight < 800 ? '260px' : '320px'
+        );
+
+        function init() {
+            const now = new Date();
+            const year = now.getFullYear();
+            
+            // Robust Date Logic
+            const start = new Date(year, 0, 1);
+            start.setHours(0, 0, 0, 0);
+            const today = new Date(now);
+            today.setHours(0, 0, 0, 0);
+            const diff = today - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay) + 1;
+
+            const totalDays = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
+            const percentage = ((dayOfYear / totalDays) * 100).toFixed(1);
+
+            // Update UI
+            document.getElementById('year-display').innerText = year;
+            document.getElementById('stats-display').innerText = `${dayOfYear} / ${totalDays} • ${percentage}%`;
+            
+            const quoteIndex = Math.max(0, (dayOfYear - 1) % QUOTES.length);
+            document.getElementById('quote-display').innerText = QUOTES[quoteIndex];
+
+            // Render Grid
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+            for (let i = 1; i <= totalDays; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                if (i < dayOfYear) dot.classList.add('passed');
+                else if (i === dayOfYear) dot.classList.add('today');
+                fragment.appendChild(dot);
+            }
+            grid.appendChild(fragment);
+
+            // AUTO-SCALE ENGINE
+            requestAnimationFrame(() => {
+                const header = document.querySelector('.header-container');
+                const scaleContainer = document.getElementById('grid-scale');
+                
+                // padding-top (15vh) + header height + safety margin (20px)
+                const usedHeight = (window.innerHeight * 0.15) + header.offsetHeight + 20;
+                const availableHeight = window.innerHeight - usedHeight;
+                const gridHeight = grid.offsetHeight;
+
+                // Scale only if necessary, max scale 1 (100%)
+                const scale = Math.min(1, availableHeight / gridHeight);
+                scaleContainer.style.transform = `scale(${scale})`;
+            });
+        }
+
+        // Execution Handling
+        const isRender = new URLSearchParams(window.location.search).has("render");
+        if (isRender) {
+            document.getElementById('main-view').classList.add('render-mode');
+            init();
+        } else {
+            init();
+            setInterval(init, 3600000);
+            // Handle screen rotation/resize
+            window.addEventListener('resize', init);
+        }
+    </script>
+</body>
+</html>
