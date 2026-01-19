@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Update | 2026 Pro</title>
+    <style>
+        :root {
+            /* Premium OLED Gradient: Deep Blue to Black */
+            --bg-gradient: linear-gradient(180deg, #10121d 0%, #08080a 40%, #000000 100%);
+            --dot-passed: #ff3b30; 
+            --dot-today: #ffffff;
+            --dot-future: #1c1c1e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+            /* Forced high-res canvas for the Screenshot API */
+            height: 2220px; 
+            width: 1080px;  
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            /* Pushed down further to avoid overlapping with your Clock Widget */
+            padding-top: 380px; 
+            overflow: hidden;
+        }
+
+        .header-container {
+            text-align: center;
+            margin-bottom: 70px;
+            width: 100%;
+        }
+
+        #quote-display {
+            font-style: italic;
+            font-weight: 400;
+            font-size: 32px; /* Elegant smaller size */
+            color: #8e8e93;
+            letter-spacing: 0.05em;
+            margin-bottom: 15px;
+        }
+
+        #year-display {
+            font-size: 140px; /* Reduced from giant size for cleaner look */
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 15px;
+            letter-spacing: -4px;
+        }
+
+        #stats-display {
+            font-size: 36px; /* Sharper, bolder stats */
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.12em;
+            opacity: 0.9;
+        }
+
+        /* Congested & Precise Grid */
+        #calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 36px); 
+            gap: 18px; 
+            justify-content: center;
+        }
+
+        .dot {
+            width: 14px; /* Perfectly round, visible but not huge */
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--dot-future);
+        }
+
+        .dot.passed {
+            background-color: var(--dot-passed);
+            box-shadow: 0 0 5px rgba(255, 59, 48, 0.3);
+        }
+
+        .dot.today {
+            background-color: var(--dot-today);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.9);
+            transform: scale(1.5);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div id="quote-display"></div>
+        <h1 id="year-display"></h1>
+        <div id="stats-display"></div>
+    </div>
+
+    <div id="calendar-grid"></div>
+
+    <script>
+        const QUOTES = [
+            "Action is everything", "Focus on the now", "The journey is the reward",
+            "Keep moving forward", "One day at a time", "Time is a gift",
+            "Build your legacy", "Stay hungry, stay foolish", "Memento Mori"
+        ];
+
+        function init() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const start = new Date(year, 0, 1);
+            start.setHours(0, 0, 0, 0);
+            const today = new Date(now);
+            today.setHours(0, 0, 0, 0);
+            
+            // Robust day calculation
+            const dayOfYear = Math.floor((today - start) / 86400000) + 1;
+            const totalDays = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365;
+            const percentage = ((dayOfYear / totalDays) * 100).toFixed(1);
+
+            document.getElementById('year-display').innerText = year;
+            document.getElementById('stats-display').innerText = `${dayOfYear} / ${totalDays} • ${percentage}%`;
+            
+            // Rotating quote based on day
+            document.getElementById('quote-display').innerText = QUOTES[dayOfYear % QUOTES.length];
+
+            const grid = document.getElementById('calendar-grid');
+            for (let i = 1; i <= totalDays; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                if (i < dayOfYear) dot.classList.add('passed');
+                else if (i === dayOfYear) dot.classList.add('today');
+                grid.appendChild(dot);
+            }
+        }
+        init();
+    </script>
+</body>
+  </html>
